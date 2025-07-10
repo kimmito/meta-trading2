@@ -1,27 +1,76 @@
 document.addEventListener('DOMContentLoaded', function() {
-    const CRM_API_URL = 'https://tracking.roischoolsummer.online/api/v3/integration';
-    const API_TOKEN = 'FFoHrZXOZL0WIrxx7fupXOcd7RbAqquSST9SAh5v516S5u3Lo9ChkFprZ0d3';
-    const LINK_ID = 4;
+    const CRM_PROXY_URL = '/api/send-to-crm';
     const FB_PIXEL_ID = '1521989735836913';
 
     // Улучшенный показ сообщений
     function showAlert(message, isSuccess = false) {
+        // Удаляем старые сообщения
+        document.querySelectorAll('.custom-alert').forEach(el => el.remove());
+        
         const alert = document.createElement('div');
         alert.className = `custom-alert ${isSuccess ? 'success' : 'error'}`;
-        alert.textContent = message;
-        
-        alert.style.position = 'fixed';
-        alert.style.top = '20px';
-        alert.style.right = '20px';
-        alert.style.padding = '15px';
-        alert.style.background = isSuccess ? '#d4edda' : '#f8d7da';
-        alert.style.color = isSuccess ? '#155724' : '#721c24';
-        alert.style.borderRadius = '4px';
-        alert.style.zIndex = '10000';
+        alert.innerHTML = `
+            <div class="alert-content">
+                <span>${message}</span>
+                <button class="close-alert">&times;</button>
+            </div>
+        `;
         
         document.body.appendChild(alert);
-        setTimeout(() => alert.remove(), 5000);
+        
+        // Автоскрытие через 5 секунд
+        const timer = setTimeout(() => alert.remove(), 5000);
+        
+        // Ручное закрытие
+        alert.querySelector('.close-alert').addEventListener('click', () => {
+            clearTimeout(timer);
+            alert.remove();
+        });
     }
+
+    // Стили для алертов
+    const style = document.createElement('style');
+    style.textContent = `
+        .custom-alert {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            max-width: 400px;
+            padding: 15px;
+            border-radius: 4px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            z-index: 9999;
+            animation: slideIn 0.3s ease-out;
+        }
+        .custom-alert.error {
+            background-color: #ffebee;
+            color: #c62828;
+            border: 1px solid #ef9a9a;
+        }
+        .custom-alert.success {
+            background-color: #e8f5e9;
+            color: #2e7d32;
+            border: 1px solid #a5d6a7;
+        }
+        .alert-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .close-alert {
+            background: none;
+            border: none;
+            font-size: 20px;
+            cursor: pointer;
+            margin-left: 10px;
+            color: inherit;
+        }
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+    `;
+    document.head.appendChild(style);
 
     // Форматирование телефона
     function formatPhone(phone) {
@@ -32,23 +81,10 @@ document.addEventListener('DOMContentLoaded', function() {
         return null;
     }
 
-    // Получение IP и страны через прокси
-    async function getGeoData() {
+    // Отправка данных через прокси с повторными попытками
+    async function sendToCRM(data, retries = 2) {
         try {
-            // Используем ваш собственный прокси для получения геоданных
-            const response = await fetch('/api/get-geo-data');
-            if (!response.ok) throw new Error('Failed to get geo data');
-            return await response.json();
-        } catch (error) {
-            console.error('Geo data error:', error);
-            return { ip: 'unknown', country: 'RU' };
-        }
-    }
-
-    // Отправка данных в CRM через прокси
-    async function sendToCRM(data) {
-        try {
-            const response = await fetch('/api/send-to-crm', {
+            const response = await fetch(CRM_PROXY_URL, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -56,7 +92,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 body: JSON.stringify(data)
             });
 
-            // Клонируем ответ перед чтением
+            // Клонируем ответ для безопасного чтения
             const responseClone = response.clone();
             
             try {
@@ -64,13 +100,17 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (!response.ok) throw new Error(result.message || 'Ошибка сервера');
                 return result;
             } catch (e) {
-                // Если не удалось распарсить JSON, читаем как текст
+                // Если JSON не парсится, пробуем прочитать как текст
                 const text = await responseClone.text();
                 console.error('Failed to parse response:', text);
                 throw new Error(text || 'Ошибка сервера');
             }
         } catch (error) {
-            console.error('Ошибка отправки в CRM:', error);
+            if (retries > 0) {
+                console.log(`Retrying... (${retries} attempts left)`);
+                await new Promise(resolve => setTimeout(resolve, 1000));
+                return sendToCRM(data, retries - 1);
+            }
             throw error;
         }
     }
@@ -98,30 +138,29 @@ document.addEventListener('DOMContentLoaded', function() {
             const formattedPhone = formatPhone(phone);
             if (!formattedPhone) throw new Error('Введите корректный номер (минимум 10 цифр)');
 
-            // Получаем геоданные
-            const geoData = await getGeoData();
-
             // Подготовка данных
             const leadData = {
                 name: name,
                 phone: formattedPhone,
                 email: `user${Date.now()}@${window.location.hostname.replace('www.', '')}`,
-                ip: geoData.ip,
-                country: geoData.country,
                 language: navigator.language.substring(0, 2) || 'ru',
                 user_agent: navigator.userAgent
             };
 
             // Отправка в CRM
-            const result = await sendToCRM({
-                api_token: API_TOKEN,
-                link_id: LINK_ID,
-                ...leadData
-            });
+            const result = await sendToCRM(leadData);
 
-            // Триггер Facebook Pixel
-            if (typeof fbq !== 'undefined') {
-                fbq('track', 'Lead', {}, { eventID: generateEventId() });
+            // Триггер Facebook Pixel (с защитой от блокировщиков)
+            try {
+                if (typeof fbq !== 'undefined') {
+                    fbq('track', 'Lead', {}, { eventID: generateEventId() });
+                } else {
+                    // Fallback для случаев, когда FB Pixel заблокирован
+                    const pixelUrl = `https://www.facebook.com/tr/?id=${FB_PIXEL_ID}&ev=Lead&dl=${encodeURIComponent(window.location.href)}`;
+                    navigator.sendBeacon(pixelUrl);
+                }
+            } catch (fbError) {
+                console.warn('Facebook Pixel error:', fbError);
             }
 
             // Обработка автологина
@@ -134,24 +173,38 @@ document.addEventListener('DOMContentLoaded', function() {
             form.reset();
 
         } catch (error) {
-            showAlert(error.message || 'Ошибка при отправке формы');
-            console.error('Ошибка формы:', error);
+            showAlert(error.message || 'Ошибка при отправке формы. Пожалуйста, попробуйте позже.');
+            console.error('Form submission error:', error);
         } finally {
             submitBtn.disabled = false;
             submitBtn.textContent = originalText;
         }
     });
 
-    // Автологин через iframe (сохраняет User-Agent и IP)
+    // Автологин с защитой от блокировщиков
     function handleAutoLogin(url) {
-        const iframe = document.createElement('iframe');
-        iframe.style.display = 'none';
-        iframe.src = url;
-        document.getElementById('autoLoginContainer').appendChild(iframe);
+        // 1. Пробуем iframe
+        try {
+            const iframe = document.createElement('iframe');
+            iframe.style.display = 'none';
+            iframe.src = url;
+            document.body.appendChild(iframe);
+        } catch (e) {
+            console.warn('iFrame auto-login failed:', e);
+        }
         
-        // Дополнительно открываем в новом окне на случай блокировки iframe
+        // 2. Пробуем новое окно
         setTimeout(() => {
-            window.open(url, '_blank', 'noopener,noreferrer');
+            try {
+                window.open(url, '_blank', 'noopener,noreferrer');
+            } catch (e) {
+                console.warn('Window.open auto-login failed:', e);
+                // 3. Последний вариант - редирект через 3 секунды
+                showAlert('Сейчас вы будете перенаправлены...', true);
+                setTimeout(() => {
+                    window.location.href = url;
+                }, 3000);
+            }
         }, 1000);
     }
 
@@ -180,7 +233,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // Генерация ID для Facebook Pixel
+    // Генерация ID для событий
     function generateEventId() {
         return 'xxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
             const r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
