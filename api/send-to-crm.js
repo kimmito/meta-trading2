@@ -19,34 +19,39 @@ export default async function handler(req, res) {
         // Формируем URL для CRM
         const url = new URL(CRM_API_URL);
         Object.entries({ api_token, link_id, ...leadData }).forEach(([key, value]) => {
-            url.searchParams.append(key, value);
+            if (value !== undefined && value !== null) {
+                url.searchParams.append(key, value);
+            }
         });
 
         // Отправка в CRM
         const crmResponse = await fetch(url.toString(), {
             method: 'GET',
-            headers: { Accept: 'application/json' },
+            headers: { 'Accept': 'application/json' }
         });
 
-        // Проверка ответа CRM
+        // Получаем ответ от CRM
+        const responseText = await crmResponse.text();
         let responseData;
+        
         try {
-            responseData = await crmResponse.json();
+            responseData = JSON.parse(responseText);
         } catch (e) {
-            console.error('Invalid CRM response:', await crmResponse.text());
-            throw new Error('Invalid CRM response format');
+            console.error('Invalid JSON from CRM:', responseText);
+            throw new Error('Invalid response format from CRM');
         }
 
         // Возвращаем ответ
         res.status(crmResponse.status).json({
             success: crmResponse.ok,
-            ...responseData,
+            ...responseData
         });
+
     } catch (error) {
         console.error('Proxy error:', error);
-        res.status(500).json({
+        res.status(500).json({ 
             success: false,
-            message: error.message || 'Internal server error',
+            message: error.message || 'Internal server error'
         });
     }
 }

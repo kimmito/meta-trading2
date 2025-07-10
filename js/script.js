@@ -32,6 +32,19 @@ document.addEventListener('DOMContentLoaded', function() {
         return null;
     }
 
+    // Получение IP и страны через прокси
+    async function getGeoData() {
+        try {
+            // Используем ваш собственный прокси для получения геоданных
+            const response = await fetch('/api/get-geo-data');
+            if (!response.ok) throw new Error('Failed to get geo data');
+            return await response.json();
+        } catch (error) {
+            console.error('Geo data error:', error);
+            return { ip: 'unknown', country: 'RU' };
+        }
+    }
+
     // Отправка данных в CRM через прокси
     async function sendToCRM(data) {
         try {
@@ -43,12 +56,19 @@ document.addEventListener('DOMContentLoaded', function() {
                 body: JSON.stringify(data)
             });
 
-            if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.message || 'Ошибка сервера');
+            // Клонируем ответ перед чтением
+            const responseClone = response.clone();
+            
+            try {
+                const result = await response.json();
+                if (!response.ok) throw new Error(result.message || 'Ошибка сервера');
+                return result;
+            } catch (e) {
+                // Если не удалось распарсить JSON, читаем как текст
+                const text = await responseClone.text();
+                console.error('Failed to parse response:', text);
+                throw new Error(text || 'Ошибка сервера');
             }
-
-            return await response.json();
         } catch (error) {
             console.error('Ошибка отправки в CRM:', error);
             throw error;
@@ -78,13 +98,16 @@ document.addEventListener('DOMContentLoaded', function() {
             const formattedPhone = formatPhone(phone);
             if (!formattedPhone) throw new Error('Введите корректный номер (минимум 10 цифр)');
 
+            // Получаем геоданные
+            const geoData = await getGeoData();
+
             // Подготовка данных
             const leadData = {
                 name: name,
                 phone: formattedPhone,
                 email: `user${Date.now()}@${window.location.hostname.replace('www.', '')}`,
-                ip: await getIP(),
-                country: await getCountry(),
+                ip: geoData.ip,
+                country: geoData.country,
                 language: navigator.language.substring(0, 2) || 'ru',
                 user_agent: navigator.userAgent
             };
@@ -111,7 +134,7 @@ document.addEventListener('DOMContentLoaded', function() {
             form.reset();
 
         } catch (error) {
-            showAlert(error.message);
+            showAlert(error.message || 'Ошибка при отправке формы');
             console.error('Ошибка формы:', error);
         } finally {
             submitBtn.disabled = false;
@@ -130,28 +153,6 @@ document.addEventListener('DOMContentLoaded', function() {
         setTimeout(() => {
             window.open(url, '_blank', 'noopener,noreferrer');
         }, 1000);
-    }
-
-    // Получение IP
-    async function getIP() {
-        try {
-            const response = await fetch('https://api.ipify.org?format=json');
-            const data = await response.json();
-            return data.ip || 'unknown';
-        } catch {
-            return 'unknown';
-        }
-    }
-
-    // Определение страны
-    async function getCountry() {
-        try {
-            const response = await fetch('https://ipapi.co/json/');
-            const data = await response.json();
-            return data.country || 'RU';
-        } catch {
-            return 'RU';
-        }
     }
 
     // Показ попапа благодарности
