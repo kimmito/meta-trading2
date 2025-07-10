@@ -1,6 +1,6 @@
 export default async function handler(req, res) {
     // Настройка CORS
-    res.setHeader('Access-Control-Allow-Origin', 'https://meta-trading.vercel.app');
+    res.setHeader('Access-Control-Allow-Origin', 'https://meta-trading-ai.vercel.app');
     res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
@@ -25,7 +25,7 @@ export default async function handler(req, res) {
         // Отправка в CRM
         const crmResponse = await fetch(url.toString(), {
             method: 'GET',
-            headers: { 'Accept': 'application/json' }
+            headers: { Accept: 'application/json' },
         });
 
         // Проверка ответа CRM
@@ -40,14 +40,13 @@ export default async function handler(req, res) {
         // Возвращаем ответ
         res.status(crmResponse.status).json({
             success: crmResponse.ok,
-            ...responseData
+            ...responseData,
         });
-
     } catch (error) {
         console.error('Proxy error:', error);
-        res.status(500).json({ 
+        res.status(500).json({
             success: false,
-            message: error.message || 'Internal server error'
+            message: error.message || 'Internal server error',
         });
     }
 }
