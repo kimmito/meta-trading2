@@ -1,0 +1,10 @@
+{
+    "version": 2,
+    "routes": [
+        {
+            "src": "/api/send-to-crm",
+            "methods": ["POST", "OPTIONS"],
+            "dest": "/api/send-to-crm.js"
+        }
+    ]
+}
