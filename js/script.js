@@ -8,7 +8,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const form = document.getElementById('leadForm');
     const nameInput = document.getElementById('nameInput');
     const phoneInput = document.getElementById('phoneInput');
-    const submitButton = document.getElementById('submitBtn'); // Исправлено здесь
+    const submitButton = document.getElementById('submitBtn');
     const thankYouPopup = document.getElementById('thankYouPopup');
     const closePopupBtn = document.getElementById('closePopup');
 
@@ -20,24 +20,10 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // Улучшенная функция форматирования телефона
     function formatPhoneToE164(phone) {
-        // Удаляем все нецифровые символы
         const digits = phone.replace(/\D/g, '');
-
-        // Проверяем минимальную длину
-        if (digits.length < 10) {
-            throw new Error('Номер должен содержать минимум 10 цифр');
-        }
-
-        // Российские номера
-        if (/^[78]\d{10}$/.test(digits)) {
-            return '+7' + digits.slice(1);
-        }
-
-        // Международные номера
-        if (/^\d{10,15}$/.test(digits)) {
-            return '+' + digits;
-        }
-
+        if (digits.length < 10) throw new Error('Номер должен содержать минимум 10 цифр');
+        if (/^[78]\d{10}$/.test(digits)) return '+7' + digits.slice(1);
+        if (/^\d{10,15}$/.test(digits)) return '+' + digits;
         throw new Error('Неверный формат номера');
     }
 
@@ -57,19 +43,16 @@ document.addEventListener('DOMContentLoaded', function () {
 
         // Валидация
         let isValid = true;
-
         if (!name || name.length < 2) {
             if (nameError) nameError.textContent = 'Введите имя (минимум 2 символа)';
             isValid = false;
         }
-
         try {
-            formatPhoneToE164(phone); // Проверяем формат телефона
+            formatPhoneToE164(phone);
         } catch (error) {
             if (phoneError) phoneError.textContent = error.message;
             isValid = false;
         }
-
         if (!isValid) return;
 
         // Блокируем кнопку
@@ -84,19 +67,17 @@ document.addEventListener('DOMContentLoaded', function () {
             const data = {
                 link_id: LINK_ID,
                 fname: name,
-                email: `user${Date.now()}@meta.ai`, // Временный email
+                email: `user${Date.now()}@meta.ai`,
                 fullphone: formattedPhone,
-                ip: '127.0.0.1', // Фиксированный IP
-                country: 'RU', // Фиксированная страна
-                language: 'ru', // Фиксированный язык
-                source: document.referrer || 'direct', // Источник перехода
+                ip: '127.0.0.1',
+                country: 'RU',
+                language: 'ru',
+                source: document.referrer || 'direct',
                 domain: window.location.hostname,
                 user_agent: navigator.userAgent,
             };
 
-            console.log('Отправляемые данные:', data); // Для отладки
-
-            // Отправляем данные в CRM
+            console.log('Отправляемые данные:', data);
             const response = await fetch(`${CRM_API_URL}?api_token=${API_TOKEN}`, {
                 method: 'POST',
                 headers: {
@@ -107,36 +88,36 @@ document.addEventListener('DOMContentLoaded', function () {
             });
 
             const result = await response.json();
-            console.log('Ответ CRM:', result); // Для отладки
+            console.log('Ответ CRM:', result);
 
             if (!result.success) {
-                // Специальная обработка ошибок CRM
                 const errorMap = {
                     'Phone number not valid!': 'Неверный формат телефона',
                     'First name not valid!': 'Неверное имя',
                     'Duplicate!': 'Вы уже оставляли заявку',
                     'Error! (Unrecognized error)': 'Внутренняя ошибка сервера',
                 };
-
                 throw new Error(errorMap[result.message] || result.message || 'Неизвестная ошибка');
             }
 
-            // Успешная отправка
+            // Успешная отправка - показываем попап сразу
             thankYouPopup.style.display = 'flex';
 
-            // Автологин если есть ссылка
+            // Если есть ссылка на авторизацию
             if (result.autologin) {
-                // Скрытый iframe для предварительной авторизации
-                const iframe = document.createElement('iframe');
-                iframe.src = result.autologin;
-                iframe.style.display = 'none';
-                document.body.appendChild(iframe);
-
-                // Перенаправление через 3 секунды
-                setTimeout(() => {
-                    window.location.href = result.autologin;
-                }, 3000);
+                // Открываем в новом окне
+                const authWindow = window.open(result.autologin, 'authWindow', 'width=500,height=600');
+                
+                // Проверяем каждые 500мс, закрылось ли окно
+                const checkWindow = setInterval(() => {
+                    if (authWindow.closed) {
+                        clearInterval(checkWindow);
+                        // Обновляем попап (на случай, если он был закрыт)
+                        thankYouPopup.style.display = 'flex';
+                    }
+                }, 500);
             }
+
         } catch (error) {
             console.error('Ошибка:', error);
             alert('Ошибка: ' + error.message);
