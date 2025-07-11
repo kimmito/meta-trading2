@@ -73,7 +73,7 @@ header {
 
 .speaker-image {
     margin-top: 10px;
-    margin-left: 70px;
+    margin-left: 150px;
     max-width: 36%;
     position: absolute;
 }
@@ -81,7 +81,7 @@ header {
     position: relative;
     top: 50px;
     z-index: -1;
-    max-width: 50%;
+    max-width: 56%;
 }
 .subtitle {
     display: flex;
@@ -312,12 +312,12 @@ footer {
     .ellipse {
         position: absolute;
         width: 100vw;
-        top: -1%;
-        left: 28%;
+        top: -20px;
+        left: 24%;
     }
     .speaker-image {
         position: relative;
-        left: -35px;
+        left: -65px;
     }
     .subtitle__about {
         width: 60%;
