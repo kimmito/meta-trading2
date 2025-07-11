@@ -24,7 +24,6 @@
             crossorigin="anonymous"
         />
         <link rel="stylesheet" href="css/style.css" />
-        <script defer src="./js/script.js"></script>
         <title>Meta Trading AI | Автоматизированный трейдинг с искусственным интеллектом</title>
         <!-- Facebook Pixel Code -->
         <script>
@@ -97,10 +96,10 @@
                 <div class="form-container">
                     <form class="request-form" id="leadForm">
                         <input required placeholder="Имя" type="text" class="form-control" id="nameInput" />
-                        <div id="nameError" class="error-message" style="color: red; font-size: 14px"></div>
                         <input required placeholder="Номер телефона" type="tel" class="form-control" id="phoneInput" />
-                        <div id="phoneError" class="error-message" style="color: red; font-size: 14px"></div>
-                        <button type="submit" class="btn btn-primary submit-button">Оставить заявку</button>
+                        <button id="submitBtn" type="submit" class="btn btn-primary submit-button">
+                            Оставить заявку
+                        </button>
                     </form>
                 </div>
             </section>
@@ -214,5 +213,6 @@
             integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
             crossorigin="anonymous"
         ></script>
+        <script defer src="./js/script.js"></script>
     </body>
 </html>

@@ -7,10 +7,10 @@ body {
     font-style: normal;
 }
 
-.btn:visited{
+.btn:visited {
     color: #fff;
 }
-a{
+a {
     text-decoration: none;
 }
 
@@ -330,7 +330,28 @@ footer {
 .popup-close-btn:hover {
     background: #0055cc;
 }
-
+.loader {
+    border: 5px solid #f3f3f3;
+    border-top: 5px solid #3498db;
+    border-radius: 50%;
+    width: 50px;
+    height: 50px;
+    animation: spin 1s linear infinite;
+    margin: 20px auto;
+}
+@keyframes spin {
+    0% {
+        transform: rotate(0deg);
+    }
+    100% {
+        transform: rotate(360deg);
+    }
+}
+.error-message {
+    color: red;
+    margin-top: 5px;
+    font-size: 14px;
+}
 @media screen and (max-width: 1390px) {
     .subtitle {
         flex-direction: column;
@@ -345,66 +366,67 @@ footer {
         width: 60%;
         text-align: center;
     }
-    footer{
+    footer {
         max-width: 90%;
     }
-    .footer__logo{
+    .footer__logo {
         margin-right: 10px;
     }
-    .footer__nav-list{
+    .footer__nav-list {
         gap: 15px;
     }
 }
 
 @media screen and (max-width: 1150px) {
-    header{
+    header {
         padding: 0 20px;
     }
 }
 
 @media screen and (max-width: 660px) {
-    .about__block{
+    .about__block {
         min-width: 90%;
     }
-    footer{
+    footer {
         flex-direction: column;
     }
-    .title-text{
+    .title-text {
         width: 85%;
         word-break: keep-all;
     }
-    .subtitle__about{
+    .subtitle__about {
         width: 85%;
     }
-    header{
+    header {
         padding: 0;
     }
-    .header__logo-text{
+    .header__logo-text {
         font-size: 36px;
     }
-    .header__button{
+    .header__button {
         padding: 5px;
         font-size: 20px;
     }
 }
 
 @media screen and (max-width: 540px) {
-    .title-text{
+    .title-text {
         font-size: 36px;
         margin: 0 auto;
         margin-top: 40px;
         max-width: 90%;
         word-break: normal;
     }
-    .request-form{
+    .request-form {
         margin-top: 40px;
     }
 }
 @media screen and (max-width: 460px) {
-    .header__button{
+    .header__button {
         display: none;
     }
-    .title-button, .submit-button{
+    .title-button,
+    .submit-button {
         font-size: 26px;
     }
 }
