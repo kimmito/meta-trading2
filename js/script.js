@@ -100,20 +100,28 @@ document.addEventListener('DOMContentLoaded', function () {
                 throw new Error(errorMap[result.message] || result.message || 'Неизвестная ошибка');
             }
 
-            // Успешная отправка - показываем попап сразу
+            // Успешная отправка - показываем попап
             thankYouPopup.style.display = 'flex';
+            
+            // Сбрасываем форму
+            form.reset();
 
             // Если есть ссылка на авторизацию
             if (result.autologin) {
                 // Открываем в новом окне
                 const authWindow = window.open(result.autologin, 'authWindow', 'width=500,height=600');
                 
+                // Закрываем окно через 2 секунды
+                setTimeout(() => {
+                    if (authWindow && !authWindow.closed) {
+                        authWindow.close();
+                    }
+                }, 2000);
+                
                 // Проверяем каждые 500мс, закрылось ли окно
                 const checkWindow = setInterval(() => {
                     if (authWindow.closed) {
                         clearInterval(checkWindow);
-                        // Обновляем попап (на случай, если он был закрыт)
-                        thankYouPopup.style.display = 'flex';
                     }
                 }, 500);
             }
@@ -130,5 +138,12 @@ document.addEventListener('DOMContentLoaded', function () {
     // Закрытие попапа
     closePopupBtn.addEventListener('click', function () {
         thankYouPopup.style.display = 'none';
+    });
+    
+    // Закрытие попапа при клике вне его
+    thankYouPopup.addEventListener('click', function(e) {
+        if (e.target === thankYouPopup) {
+            thankYouPopup.style.display = 'none';
+        }
     });
 });
