@@ -95,22 +95,11 @@
                     Запишитесь прямо сейчас и получите бесплатную консультацию от нашего эксперта
                 </h2>
                 <div class="form-container">
-                    <form class="request-form">
-                        <input
-                            required
-                            placeholder="Имя"
-                            type="text"
-                            class="form-control"
-                            id="inputEmail"
-                            aria-describedby="emailHelp"
-                        />
-                        <input
-                            required
-                            placeholder="Номер телефона"
-                            type="tel"
-                            class="form-control"
-                            id="inputPassword"
-                        />
+                    <form class="request-form" id="leadForm">
+                        <input required placeholder="Имя" type="text" class="form-control" id="nameInput" />
+                        <div id="nameError" class="error-message" style="color: red; font-size: 14px"></div>
+                        <input required placeholder="Номер телефона" type="tel" class="form-control" id="phoneInput" />
+                        <div id="phoneError" class="error-message" style="color: red; font-size: 14px"></div>
                         <button type="submit" class="btn btn-primary submit-button">Оставить заявку</button>
                     </form>
                 </div>
