@@ -266,6 +266,7 @@ footer {
 }
 
 .footer-button{
+    max-width: 300px;
     padding: 10px 20px;
     margin: 50px auto;
     display: flex;
