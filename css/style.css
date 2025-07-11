@@ -330,37 +330,22 @@ footer {
 .popup-close-btn:hover {
     background: #0055cc;
 }
-.loader {
-    border: 5px solid #f3f3f3;
-    border-top: 5px solid #3498db;
-    border-radius: 50%;
-    width: 50px;
-    height: 50px;
-    animation: spin 1s linear infinite;
-    margin: 20px auto;
-}
-@keyframes spin {
-    0% {
-        transform: rotate(0deg);
-    }
-    100% {
-        transform: rotate(360deg);
-    }
-}
-.error-message {
-    color: red;
-    margin-top: 5px;
-    font-size: 14px;
-}
+
 @media screen and (max-width: 1390px) {
     .subtitle {
         flex-direction: column;
         justify-content: center;
         align-items: center;
     }
-    .ellipse,
+    .ellipse {
+        position: absolute;
+        width: 100vw;
+        top: -1%;
+        left: 28%;
+    }
     .speaker-image {
-        display: none;
+        position: relative;
+        left: -35px;
     }
     .subtitle__about {
         width: 60%;
@@ -375,11 +360,33 @@ footer {
     .footer__nav-list {
         gap: 15px;
     }
+    .header__logo-text {
+        font-size: 14px;
+    }
 }
 
 @media screen and (max-width: 1150px) {
     header {
         padding: 0 20px;
+    }
+    .title-text {
+        font-size: 24px;
+        font-weight: 600;
+    }
+    .subtitle__about {
+        margin-top: 40px;
+    }
+    .subtitle-head {
+        font-size: 36px;
+    }
+    .subtitle-text {
+        font-size: 22px;
+    }
+    .sized {
+        font-size: 28px;
+    }
+    .about__block {
+        margin-top: 60px;
     }
 }
 
@@ -390,28 +397,24 @@ footer {
     footer {
         flex-direction: column;
     }
-    .title-text {
-        width: 85%;
-        word-break: keep-all;
-    }
+
     .subtitle__about {
         width: 85%;
     }
     header {
         padding: 0;
     }
-    .header__logo-text {
-        font-size: 36px;
-    }
     .header__button {
         padding: 5px;
         font-size: 20px;
+    }
+    .header__button {
+        font-size: 12px;
     }
 }
 
 @media screen and (max-width: 540px) {
     .title-text {
-        font-size: 36px;
         margin: 0 auto;
         margin-top: 40px;
         max-width: 90%;
@@ -422,9 +425,6 @@ footer {
     }
 }
 @media screen and (max-width: 460px) {
-    .header__button {
-        display: none;
-    }
     .title-button,
     .submit-button {
         font-size: 26px;
