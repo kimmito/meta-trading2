@@ -27,6 +27,10 @@
         <title>Meta Trading AI | Автоматизированный трейдинг с искусственным интеллектом</title>
         <!-- Facebook Pixel Code -->
         <script>
+            window.onerror = function (message, source, lineno, colno, error) {
+                console.error('FB Pixel error:', message, source, error);
+            };
+
             !(function (f, b, e, v, n, t, s) {
                 if (f.fbq) return;
                 n = f.fbq = function () {
@@ -37,14 +41,30 @@
                 n.loaded = !0;
                 n.version = '2.0';
                 n.queue = [];
+
                 t = b.createElement(e);
                 t.async = !0;
                 t.src = v;
+                t.onerror = function () {
+                    console.error('Failed to load FB Pixel script');
+                };
+
                 s = b.getElementsByTagName(e)[0];
                 s.parentNode.insertBefore(t, s);
             })(window, document, 'script', 'https://connect.facebook.net/en_US/fbevents.js');
-            fbq('init', '1521989735836913');
-            fbq('track', 'PageView');
+
+            function checkFbqLoaded() {
+                if (typeof fbq !== 'undefined') {
+                    fbq('init', '1521989735836913');
+                    fbq('track', 'PageView');
+                    console.log('FB Pixel initialized successfully');
+                } else {
+                    console.warn('FB Pixel not loaded, retrying...');
+                    setTimeout(checkFbqLoaded, 500);
+                }
+            }
+
+            setTimeout(checkFbqLoaded, 1000);
         </script>
         <noscript>
             <img
@@ -54,6 +74,7 @@
                 src="https://www.facebook.com/tr?id=1521989735836913&ev=PageView&noscript=1"
             />
         </noscript>
+        <!-- End Facebook Pixel Code -->
     </head>
     <body>
         <header id="header">

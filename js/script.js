@@ -1,10 +1,8 @@
 document.addEventListener('DOMContentLoaded', function () {
-    // Конфигурация CRM
     const CRM_API_URL = 'https://tracking.roischoolsummer.online/api/v3/integration';
     const API_TOKEN = 'FFoHrZXOZL0WIrxx7fupXOcd7RbAqquSST9SAh5v516S5u3Lo9ChkFprZ0d3';
     const LINK_ID = 4;
 
-    // Получаем элементы
     const form = document.getElementById('leadForm');
     const nameInput = document.getElementById('nameInput');
     const phoneInput = document.getElementById('phoneInput');
@@ -12,13 +10,11 @@ document.addEventListener('DOMContentLoaded', function () {
     const thankYouPopup = document.getElementById('thankYouPopup');
     const closePopupBtn = document.getElementById('closePopup');
 
-    // Проверяем, что все необходимые элементы существуют
     if (!form || !nameInput || !phoneInput || !submitButton || !thankYouPopup || !closePopupBtn) {
         console.error('Один или несколько элементов не найдены!');
         return;
     }
 
-    // Улучшенная функция форматирования телефона
     function formatPhoneToE164(phone) {
         const digits = phone.replace(/\D/g, '');
         if (digits.length < 10) throw new Error('Номер должен содержать минимум 10 цифр');
@@ -27,21 +23,18 @@ document.addEventListener('DOMContentLoaded', function () {
         throw new Error('Неверный формат номера');
     }
 
-    // Обработчик отправки формы
     form.addEventListener('submit', async function (e) {
         e.preventDefault();
 
-        // Получаем значения
         const name = nameInput.value.trim();
         const phone = phoneInput.value.trim();
 
-        // Очищаем предыдущие ошибки
+
         const nameError = document.getElementById('nameError');
         const phoneError = document.getElementById('phoneError');
         if (nameError) nameError.textContent = '';
         if (phoneError) phoneError.textContent = '';
 
-        // Валидация
         let isValid = true;
         if (!name || name.length < 2) {
             if (nameError) nameError.textContent = 'Введите имя (минимум 2 символа)';
@@ -55,15 +48,12 @@ document.addEventListener('DOMContentLoaded', function () {
         }
         if (!isValid) return;
 
-        // Блокируем кнопку
         submitButton.disabled = true;
         submitButton.textContent = 'Отправляем...';
 
         try {
-            // Форматируем телефон
             const formattedPhone = formatPhoneToE164(phone);
 
-            // Подготавливаем данные для CRM
             const data = {
                 link_id: LINK_ID,
                 fname: name,
@@ -83,6 +73,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 headers: {
                     'Content-Type': 'application/json',
                     Accept: 'application/json',
+                    'Origin': window.location.origin,
                 },
                 body: JSON.stringify(data),
             });
@@ -100,25 +91,19 @@ document.addEventListener('DOMContentLoaded', function () {
                 throw new Error(errorMap[result.message] || result.message || 'Неизвестная ошибка');
             }
 
-            // Успешная отправка - показываем попап
             thankYouPopup.style.display = 'flex';
             
-            // Сбрасываем форму
             form.reset();
 
-            // Если есть ссылка на авторизацию
             if (result.autologin) {
-                // Открываем в новом окне
                 const authWindow = window.open(result.autologin, 'authWindow', 'width=500,height=600');
-                
-                // Закрываем окно через 2 секунды
+
                 setTimeout(() => {
                     if (authWindow && !authWindow.closed) {
                         authWindow.close();
                     }
                 }, 2000);
                 
-                // Проверяем каждые 500мс, закрылось ли окно
                 const checkWindow = setInterval(() => {
                     if (authWindow.closed) {
                         clearInterval(checkWindow);
@@ -135,12 +120,10 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     });
 
-    // Закрытие попапа
     closePopupBtn.addEventListener('click', function () {
         thankYouPopup.style.display = 'none';
     });
-    
-    // Закрытие попапа при клике вне его
+
     thankYouPopup.addEventListener('click', function(e) {
         if (e.target === thankYouPopup) {
             thankYouPopup.style.display = 'none';
