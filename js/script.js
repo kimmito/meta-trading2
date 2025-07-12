@@ -35,43 +35,28 @@ document.addEventListener('DOMContentLoaded', function () {
         elements.phoneInput.parentNode.insertBefore(phoneError, elements.phoneInput.nextSibling);
     }
 
-    // Инициализация intl-tel-input
     let iti;
-    function initPhoneInput() {
-        try {
-            if (typeof intlTelInput === 'undefined') {
-                throw new Error('Библиотека intlTelInput не загружена');
-            }
 
-            iti = intlTelInput(elements.phoneInput, {
+    function initPhoneInput() {
+        if (window.intlTelInput) {
+            iti = intlTelInput(document.getElementById('phoneInput'), {
                 initialCountry: 'ru',
                 separateDialCode: true,
                 preferredCountries: ['ru', 'us', 'gb', 'de', 'fr'],
-                utilsScript: 'https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/js/utils.js',
-                customPlaceholder: function (selectedCountryPlaceholder) {
-                    return selectedCountryPlaceholder;
-                },
-                nationalMode: false,
-                autoPlaceholder: 'aggressive',
+                utilsScript: '/js/utils.js',
+                customContainer: 'intl-tel-input',
             });
-
-            console.log('intlTelInput успешно инициализирован');
             return true;
-        } catch (error) {
-            console.error('Ошибка инициализации intlTelInput:', error);
-            elements.phoneInput.placeholder = 'Номер телефона (в международном формате)';
-            return false;
         }
+        return false;
     }
 
-    // Пытаемся инициализировать с задержкой
-    setTimeout(() => {
+    // Инициализация при полной загрузке страницы
+    window.addEventListener('load', function () {
         if (!initPhoneInput()) {
-            console.warn('Повторная попытка инициализации intlTelInput');
-            setTimeout(initPhoneInput, 500);
+            console.error('Ошибка инициализации intlTelInput');
         }
-    }, 100);
-
+    });
     // Обработчик отправки формы
     elements.form.addEventListener('submit', async function (e) {
         e.preventDefault();

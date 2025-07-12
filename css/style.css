@@ -318,7 +318,12 @@ footer {
     color: #dc3545;
 }
 
-
+.iti {
+    width: 55%;
+}
+.iti__flag-container {
+    display: block !important;
+}
 @media screen and (max-width: 1390px) {
     .subtitle {
         flex-direction: column;
