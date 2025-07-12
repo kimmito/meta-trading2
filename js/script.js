@@ -15,13 +15,24 @@ document.addEventListener('DOMContentLoaded', function () {
         return;
     }
 
-    function formatPhoneToE164(phone) {
-        const digits = phone.replace(/\D/g, '');
-        if (digits.length < 10) throw new Error('Номер должен содержать минимум 10 цифр');
-        if (/^[78]\d{10}$/.test(digits)) return '+7' + digits.slice(1);
-        if (/^\d{10,15}$/.test(digits)) return '+' + digits;
-        throw new Error('Неверный формат номера');
-    }
+    // Инициализация intl-tel-input
+    const iti = window.intlTelInput(phoneInput, {
+        initialCountry: 'ru',
+        separateDialCode: true,
+        preferredCountries: ['ru', 'us', 'gb', 'de', 'fr'],
+        utilsScript: 'https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/js/utils.js',
+    });
+
+    // Создаем элементы для отображения ошибок
+    const nameError = document.createElement('div');
+    nameError.className = 'error-message text-danger mt-1';
+    nameError.id = 'nameError';
+    nameInput.parentNode.insertBefore(nameError, nameInput.nextSibling);
+
+    const phoneError = document.createElement('div');
+    phoneError.className = 'error-message text-danger mt-1';
+    phoneError.id = 'phoneError';
+    phoneInput.parentNode.insertBefore(phoneError, phoneInput.nextSibling);
 
     form.addEventListener('submit', async function (e) {
         e.preventDefault();
@@ -29,38 +40,43 @@ document.addEventListener('DOMContentLoaded', function () {
         const name = nameInput.value.trim();
         const phone = phoneInput.value.trim();
 
-
-        const nameError = document.getElementById('nameError');
-        const phoneError = document.getElementById('phoneError');
-        if (nameError) nameError.textContent = '';
-        if (phoneError) phoneError.textContent = '';
+        // Очищаем предыдущие ошибки
+        nameError.textContent = '';
+        phoneError.textContent = '';
 
         let isValid = true;
+
+        // Валидация имени
         if (!name || name.length < 2) {
-            if (nameError) nameError.textContent = 'Введите имя (минимум 2 символа)';
+            nameError.textContent = 'Введите имя (минимум 2 символа)';
             isValid = false;
         }
-        try {
-            formatPhoneToE164(phone);
-        } catch (error) {
-            if (phoneError) phoneError.textContent = error.message;
+
+        // Валидация телефона
+        if (phone.trim() === '') {
+            phoneError.textContent = 'Введите номер телефона';
+            isValid = false;
+        } else if (!iti.isValidNumber()) {
+            phoneError.textContent = 'Введите корректный номер телефона';
             isValid = false;
         }
+
         if (!isValid) return;
 
         submitButton.disabled = true;
         submitButton.textContent = 'Отправляем...';
 
         try {
-            const formattedPhone = formatPhoneToE164(phone);
+            const phoneNumber = iti.getNumber(); // Получаем номер в формате E164
+            const countryCode = iti.getSelectedCountryData().iso2;
 
             const data = {
                 link_id: LINK_ID,
                 fname: name,
                 email: `user${Date.now()}@meta.ai`,
-                fullphone: formattedPhone,
+                fullphone: phoneNumber,
                 ip: '127.0.0.1',
-                country: 'RU',
+                country: countryCode.toUpperCase(),
                 language: 'ru',
                 source: document.referrer || 'direct',
                 domain: window.location.hostname,
@@ -73,7 +89,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 headers: {
                     'Content-Type': 'application/json',
                     Accept: 'application/json',
-                    'Origin': window.location.origin,
+                    Origin: window.location.origin,
                 },
                 body: JSON.stringify(data),
             });
@@ -92,7 +108,7 @@ document.addEventListener('DOMContentLoaded', function () {
             }
 
             thankYouPopup.style.display = 'flex';
-            
+
             form.reset();
 
             if (result.autologin) {
@@ -103,14 +119,13 @@ document.addEventListener('DOMContentLoaded', function () {
                         authWindow.close();
                     }
                 }, 2000);
-                
+
                 const checkWindow = setInterval(() => {
                     if (authWindow.closed) {
                         clearInterval(checkWindow);
                     }
                 }, 500);
             }
-
         } catch (error) {
             console.error('Ошибка:', error);
             alert('Ошибка: ' + error.message);
@@ -124,7 +139,7 @@ document.addEventListener('DOMContentLoaded', function () {
         thankYouPopup.style.display = 'none';
     });
 
-    thankYouPopup.addEventListener('click', function(e) {
+    thankYouPopup.addEventListener('click', function (e) {
         if (e.target === thankYouPopup) {
             thankYouPopup.style.display = 'none';
         }
