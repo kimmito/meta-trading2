@@ -312,6 +312,13 @@ footer {
     background-color: #0056b3;
 }
 
+.error-message {
+    font-size: 0.875rem;
+    margin-top: 0.25rem;
+    color: #dc3545;
+}
+
+
 @media screen and (max-width: 1390px) {
     .subtitle {
         flex-direction: column;

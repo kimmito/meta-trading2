@@ -1,74 +1,114 @@
 document.addEventListener('DOMContentLoaded', function () {
+    // Конфигурационные константы
     const CRM_API_URL = 'https://tracking.roischoolsummer.online/api/v3/integration';
     const API_TOKEN = 'FFoHrZXOZL0WIrxx7fupXOcd7RbAqquSST9SAh5v516S5u3Lo9ChkFprZ0d3';
     const LINK_ID = 4;
 
-    const form = document.getElementById('leadForm');
-    const nameInput = document.getElementById('nameInput');
-    const phoneInput = document.getElementById('phoneInput');
-    const submitButton = document.getElementById('submitBtn');
-    const thankYouPopup = document.getElementById('thankYouPopup');
-    const closePopupBtn = document.getElementById('closePopup');
+    // Получаем элементы DOM
+    const elements = {
+        form: document.getElementById('leadForm'),
+        nameInput: document.getElementById('nameInput'),
+        phoneInput: document.getElementById('phoneInput'),
+        submitButton: document.getElementById('submitBtn'),
+        thankYouPopup: document.getElementById('thankYouPopup'),
+        closePopupBtn: document.getElementById('closePopup'),
+    };
 
-    if (!form || !nameInput || !phoneInput || !submitButton || !thankYouPopup || !closePopupBtn) {
-        console.error('Один или несколько элементов не найдены!');
+    // Проверяем, что все элементы существуют
+    if (Object.values(elements).some((el) => !el)) {
+        console.error('Не все необходимые элементы найдены на странице');
         return;
     }
 
+    // Добавляем элементы для ошибок (если их нет в HTML)
+    if (!document.getElementById('nameError')) {
+        const nameError = document.createElement('div');
+        nameError.className = 'error-message';
+        nameError.id = 'nameError';
+        elements.nameInput.parentNode.insertBefore(nameError, elements.nameInput.nextSibling);
+    }
+
+    if (!document.getElementById('phoneError')) {
+        const phoneError = document.createElement('div');
+        phoneError.className = 'error-message';
+        phoneError.id = 'phoneError';
+        elements.phoneInput.parentNode.insertBefore(phoneError, elements.phoneInput.nextSibling);
+    }
+
     // Инициализация intl-tel-input
-    const iti = window.intlTelInput(phoneInput, {
-        initialCountry: 'ru',
-        separateDialCode: true,
-        preferredCountries: ['ru', 'us', 'gb', 'de', 'fr'],
-        utilsScript: 'https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/js/utils.js',
-    });
+    let iti;
+    function initPhoneInput() {
+        try {
+            if (typeof intlTelInput === 'undefined') {
+                throw new Error('Библиотека intlTelInput не загружена');
+            }
 
-    // Создаем элементы для отображения ошибок
-    const nameError = document.createElement('div');
-    nameError.className = 'error-message text-danger mt-1';
-    nameError.id = 'nameError';
-    nameInput.parentNode.insertBefore(nameError, nameInput.nextSibling);
+            iti = intlTelInput(elements.phoneInput, {
+                initialCountry: 'ru',
+                separateDialCode: true,
+                preferredCountries: ['ru', 'us', 'gb', 'de', 'fr'],
+                utilsScript: 'https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/js/utils.js',
+                customPlaceholder: function (selectedCountryPlaceholder) {
+                    return selectedCountryPlaceholder;
+                },
+                nationalMode: false,
+                autoPlaceholder: 'aggressive',
+            });
 
-    const phoneError = document.createElement('div');
-    phoneError.className = 'error-message text-danger mt-1';
-    phoneError.id = 'phoneError';
-    phoneInput.parentNode.insertBefore(phoneError, phoneInput.nextSibling);
+            console.log('intlTelInput успешно инициализирован');
+            return true;
+        } catch (error) {
+            console.error('Ошибка инициализации intlTelInput:', error);
+            elements.phoneInput.placeholder = 'Номер телефона (в международном формате)';
+            return false;
+        }
+    }
 
-    form.addEventListener('submit', async function (e) {
+    // Пытаемся инициализировать с задержкой
+    setTimeout(() => {
+        if (!initPhoneInput()) {
+            console.warn('Повторная попытка инициализации intlTelInput');
+            setTimeout(initPhoneInput, 500);
+        }
+    }, 100);
+
+    // Обработчик отправки формы
+    elements.form.addEventListener('submit', async function (e) {
         e.preventDefault();
 
-        const name = nameInput.value.trim();
-        const phone = phoneInput.value.trim();
+        const name = elements.nameInput.value.trim();
+        const phone = elements.phoneInput.value.trim();
 
         // Очищаем предыдущие ошибки
-        nameError.textContent = '';
-        phoneError.textContent = '';
+        document.getElementById('nameError').textContent = '';
+        document.getElementById('phoneError').textContent = '';
 
         let isValid = true;
 
         // Валидация имени
         if (!name || name.length < 2) {
-            nameError.textContent = 'Введите имя (минимум 2 символа)';
+            document.getElementById('nameError').textContent = 'Введите имя (минимум 2 символа)';
             isValid = false;
         }
 
         // Валидация телефона
-        if (phone.trim() === '') {
-            phoneError.textContent = 'Введите номер телефона';
+        if (!phone) {
+            document.getElementById('phoneError').textContent = 'Введите номер телефона';
             isValid = false;
-        } else if (!iti.isValidNumber()) {
-            phoneError.textContent = 'Введите корректный номер телефона';
+        } else if (iti && !iti.isValidNumber()) {
+            document.getElementById('phoneError').textContent = 'Введите корректный номер телефона';
             isValid = false;
         }
 
         if (!isValid) return;
 
-        submitButton.disabled = true;
-        submitButton.textContent = 'Отправляем...';
+        // Блокируем кнопку отправки
+        elements.submitButton.disabled = true;
+        elements.submitButton.textContent = 'Отправляем...';
 
         try {
-            const phoneNumber = iti.getNumber(); // Получаем номер в формате E164
-            const countryCode = iti.getSelectedCountryData().iso2;
+            const phoneNumber = iti ? iti.getNumber() : phone;
+            const countryCode = iti ? iti.getSelectedCountryData().iso2 : 'ru';
 
             const data = {
                 link_id: LINK_ID,
@@ -83,19 +123,18 @@ document.addEventListener('DOMContentLoaded', function () {
                 user_agent: navigator.userAgent,
             };
 
-            console.log('Отправляемые данные:', data);
+            console.log('Отправка данных:', data);
             const response = await fetch(`${CRM_API_URL}?api_token=${API_TOKEN}`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                     Accept: 'application/json',
-                    Origin: window.location.origin,
                 },
                 body: JSON.stringify(data),
             });
 
             const result = await response.json();
-            console.log('Ответ CRM:', result);
+            console.log('Ответ сервера:', result);
 
             if (!result.success) {
                 const errorMap = {
@@ -107,41 +146,43 @@ document.addEventListener('DOMContentLoaded', function () {
                 throw new Error(errorMap[result.message] || result.message || 'Неизвестная ошибка');
             }
 
-            thankYouPopup.style.display = 'flex';
+            // Показываем попап успешной отправки
+            elements.thankYouPopup.style.display = 'flex';
+            elements.form.reset();
 
-            form.reset();
-
+            // Обработка автологина (если есть)
             if (result.autologin) {
-                const authWindow = window.open(result.autologin, 'authWindow', 'width=500,height=600');
-
-                setTimeout(() => {
-                    if (authWindow && !authWindow.closed) {
-                        authWindow.close();
-                    }
-                }, 2000);
-
-                const checkWindow = setInterval(() => {
-                    if (authWindow.closed) {
-                        clearInterval(checkWindow);
-                    }
-                }, 500);
+                handleAutologin(result.autologin);
             }
         } catch (error) {
             console.error('Ошибка:', error);
             alert('Ошибка: ' + error.message);
         } finally {
-            submitButton.disabled = false;
-            submitButton.textContent = 'Отправить заявку';
+            // Разблокируем кнопку
+            elements.submitButton.disabled = false;
+            elements.submitButton.textContent = 'Оставить заявку';
         }
     });
 
-    closePopupBtn.addEventListener('click', function () {
-        thankYouPopup.style.display = 'none';
+    // Обработчик автологина
+    function handleAutologin(url) {
+        const authWindow = window.open(url, 'authWindow', 'width=500,height=600');
+
+        setTimeout(() => {
+            if (authWindow && !authWindow.closed) {
+                authWindow.close();
+            }
+        }, 2000);
+    }
+
+    // Закрытие попапа
+    elements.closePopupBtn.addEventListener('click', function () {
+        elements.thankYouPopup.style.display = 'none';
     });
 
-    thankYouPopup.addEventListener('click', function (e) {
-        if (e.target === thankYouPopup) {
-            thankYouPopup.style.display = 'none';
+    elements.thankYouPopup.addEventListener('click', function (e) {
+        if (e.target === elements.thankYouPopup) {
+            elements.thankYouPopup.style.display = 'none';
         }
     });
 });
