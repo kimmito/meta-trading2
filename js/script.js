@@ -11,6 +11,48 @@ function trackFacebookLead() {
     }
 }
 
+// Функция для проверки, было ли заблокировано всплывающее окно
+function isPopupBlocked(popupWindow) {
+    return !popupWindow || popupWindow.closed || typeof popupWindow.closed === 'undefined';
+}
+
+// Альтернативный способ открытия авторизации
+function openAuthFallback(authUrl) {
+    // Вариант 1: Перенаправление текущей вкладки
+    // window.location.href = authUrl;
+    
+    // Вариант 2: Открытие в новой вкладке (менее агрессивно)
+    const newTab = window.open(authUrl, '_blank');
+    if (newTab) {
+        newTab.focus();
+    } else {
+        // Вариант 3: Показать кнопку для ручного перехода
+        const fallbackDiv = document.createElement('div');
+        fallbackDiv.style.position = 'fixed';
+        fallbackDiv.style.bottom = '20px';
+        fallbackDiv.style.left = '20px';
+        fallbackDiv.style.padding = '15px';
+        fallbackDiv.style.backgroundColor = '#f8f9fa';
+        fallbackDiv.style.border = '1px solid #dee2e6';
+        fallbackDiv.style.borderRadius = '5px';
+        fallbackDiv.style.zIndex = '10000';
+        
+        const message = document.createElement('p');
+        message.textContent = 'Для завершения регистрации перейдите по ссылке:';
+        
+        const link = document.createElement('a');
+        link.href = authUrl;
+        link.textContent = 'Перейти к авторизации';
+        link.style.display = 'block';
+        link.style.marginTop = '10px';
+        link.style.color = 'blue';
+        
+        fallbackDiv.appendChild(message);
+        fallbackDiv.appendChild(link);
+        document.body.appendChild(fallbackDiv);
+    }
+}
+
 // Main Application
 document.addEventListener('DOMContentLoaded', function () {
     console.log('DOM fully loaded');
@@ -125,10 +167,16 @@ document.addEventListener('DOMContentLoaded', function () {
             trackFacebookLead();
 
             if (result.autologin) {
+                // Пытаемся открыть всплывающее окно
                 const authWindow = window.open(result.autologin, 'authWindow', 'width=500,height=600');
-                if (!authWindow) {
-                    alert('Пожалуйста, разрешите всплывающие окна для автоматической авторизации');
-                }
+                
+                // Проверяем, было ли окно заблокировано
+                setTimeout(() => {
+                    if (isPopupBlocked(authWindow)) {
+                        // Используем альтернативный метод
+                        openAuthFallback(result.autologin);
+                    }
+                }, 100);
             }
         } catch (error) {
             console.error('Error:', error);
