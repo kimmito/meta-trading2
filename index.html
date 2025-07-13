@@ -3,7 +3,6 @@
     <head>
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <!-- SEO Meta Tags -->
         <meta
             name="description"
             content="Meta Trading AI - революционная платформа для автоматизированного трейдинга с использованием искусственного интеллекта. Начните зарабатывать от 270€ в день."
@@ -13,9 +12,7 @@
             content="трейдинг, AI, искусственный интеллект, заработок, Meta, форекс, криптовалюта, инвестиции"
         />
         <meta name="author" content="Meta Trading AI" />
-        <!-- Favicon -->
         <link rel="icon" href="./img/meta-logo.ico" type="image/x-icon" />
-        <!-- Styles -->
         <link rel="stylesheet" href="css/null-style.css" />
         <link
             href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
@@ -23,16 +20,11 @@
             integrity="sha384-9ndCyUaIbzAi2FUVXJi0CjmCapSmO7SnpJef0486qhLnuZ2cdeRhO02iuK6FUUVM"
             crossorigin="anonymous"
         />
-        <!-- intl-tel-input CSS -->
         <link rel="stylesheet" href="css/intlTelInput.min.css" />
         <link rel="stylesheet" href="css/style.css" />
         <title>Meta Trading AI | Автоматизированный трейдинг с искусственным интеллектом</title>
         <!-- Facebook Pixel Code -->
         <script>
-            window.onerror = function (message, source, lineno, colno, error) {
-                console.error('FB Pixel error:', message, source, error);
-            };
-
             !(function (f, b, e, v, n, t, s) {
                 if (f.fbq) return;
                 n = f.fbq = function () {
@@ -43,30 +35,9 @@
                 n.loaded = !0;
                 n.version = '2.0';
                 n.queue = [];
-
-                t = b.createElement(e);
-                t.async = !0;
-                t.src = v;
-                t.onerror = function () {
-                    console.error('Failed to load FB Pixel script');
-                };
-
-                s = b.getElementsByTagName(e)[0];
-                s.parentNode.insertBefore(t, s);
+                fbq('init', '1521989735836913');
+                fbq('track', 'PageView');
             })(window, document, 'script', 'https://connect.facebook.net/en_US/fbevents.js');
-
-            function checkFbqLoaded() {
-                if (typeof fbq !== 'undefined') {
-                    fbq('init', '1521989735836913');
-                    fbq('track', 'PageView');
-                    console.log('FB Pixel initialized successfully');
-                } else {
-                    console.warn('FB Pixel not loaded, retrying...');
-                    setTimeout(checkFbqLoaded, 500);
-                }
-            }
-
-            setTimeout(checkFbqLoaded, 1000);
         </script>
         <noscript>
             <img
@@ -119,7 +90,9 @@
                 <div class="form-container">
                     <form class="request-form" id="leadForm">
                         <input required placeholder="Имя" type="text" class="form-control" id="nameInput" />
+                        <div id="nameError" class="error-message"></div>
                         <input required placeholder="Номер телефона" type="tel" class="form-control" id="phoneInput" />
+                        <div id="phoneError" class="error-message"></div>
                         <button id="submitBtn" type="submit" class="btn btn-primary submit-button">
                             Оставить заявку
                         </button>
@@ -127,6 +100,7 @@
                 </div>
             </section>
         </main>
+
         <section class="about-section">
             <h2 class="about__title title-text">
                 Более 28 000 довольных клиентов <br /><span class="sized">уже выбрали META TRADING AI </span><br />Вот
@@ -223,6 +197,7 @@
                 </nav>
             </footer>
         </section>
+
         <div class="thank-you-popup" id="thankYouPopup">
             <div class="popup-content">
                 <h2>Спасибо за заявку!</h2>
@@ -233,7 +208,8 @@
 
         <div id="autoLoginContainer" style="display: none"></div>
 
-        <!-- Подключаем скрипты в правильном порядке -->
+        
+
         <script
             src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
             integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
@@ -241,5 +217,6 @@
         ></script>
         <script src="js/intlTelInputWithUtils.min.js"></script>
         <script defer src="./js/script.js"></script>
+        
     </body>
 </html>
