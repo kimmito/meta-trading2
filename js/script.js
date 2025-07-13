@@ -122,7 +122,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         // Блокировка кнопки
         elements.submitButton.disabled = true;
-        elements.submitButton.textContent = 'Отправка...';
+        elements.submitButton.textContent = 'Отправка....';
         console.log('Кнопка заблокирована');
 
         try {
@@ -151,6 +151,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
             console.log('Подготовленные данные для отправки:', data);
 
+            // Добавьте режим 'cors' и обработку ошибок
             const response = await fetch(`${CRM_API_URL}?api_token=${API_TOKEN}`, {
                 method: 'POST',
                 headers: {
@@ -158,6 +159,8 @@ document.addEventListener('DOMContentLoaded', function () {
                     Accept: 'application/json',
                 },
                 body: JSON.stringify(data),
+                mode: 'cors', // Явно указываем режим CORS
+                credentials: 'omit', // Не отправляем куки
             });
 
             console.log('Ответ сервера получен. Статус:', response.status);
